@@ -1,4 +1,3 @@
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
@@ -17,19 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-//find out how to periodically siphon off money into a different wallet
-// create a second wallet w money im taking for fee, with just your funds
-//library has clear documentation on how to transfer
-//transfer money to second account
-// make a transfer function
-//run this at home to download rest of blockchain. then u can see the transfer of satoshis
-//check blockCypher to see if it works
-
-//at home, when running code, it will keep logging. the event listener for transactions, it will record/spit out every tranaction
-//output other transactions, download rest of blockchain
-//received reject tranaction
-//u see the money in the faucet?
-
 public class Bank {
 
     // Constants and Global Variables
@@ -38,8 +24,6 @@ public class Bank {
     private static final long RECENT_PERIOD = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
     private static List<Transaction> recentTransactions = new ArrayList<>();
     private static WalletAppKit walletAppKit = null;
-    private static long lastTransferTime = 0;
-    private static final long TRANSFER_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
     static {
         // Assuming SLF4J is bound to logback
@@ -51,7 +35,6 @@ public class Bank {
     public static void main(String[] args) throws Exception {
         // Wallet setup
         Wallet wallet = checkOrCreateWallet(params); 
-        Wallet personalWallet = checkOrCreateWallet(params);
 
         // Event listener for transactions
         wallet.addCoinsReceivedEventListener(new WalletCoinsReceivedEventListener() {
@@ -75,15 +58,8 @@ public class Bank {
             System.out.println("Block height: " + walletAppKit.chain().getBestChainHeight());
             System.out.println("Peers: " + walletAppKit.peerGroup().getConnectedPeers().size());
 
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastTransferTime >= TRANSFER_INTERVAL) {
-            transferMyFee(wallet, personalWallet);
-            lastTransferTime = currentTime;
-        }
-
-        TimeUnit.SECONDS.sleep(30); // Adjust check interval as needed
-
             // Optionally, clean up old transactions from the list
+            long currentTime = System.currentTimeMillis();
             recentTransactions.removeIf(tx -> currentTime - tx.getUpdateTime().getTime() > RECENT_PERIOD);
 
             TimeUnit.SECONDS.sleep(30); // Adjust check interval as needed
@@ -111,26 +87,6 @@ public class Bank {
             throw new UnreadableWalletException("Wallet not found, created a new one");
         }
     }
-
-    //transfer function
-    private static void transferMyFee(Wallet client, Wallet personal) {
-        try {
-            Coin balance = client.getBalance();
-            Coin fee = balance.multiply((long) 0.01); // 1% of balance
-
-        if (fee.isGreaterThan(Coin.ZERO)) {
-            Address destination = personal.currentReceiveAddress();
-            Wallet.SendResult sendResult = client.sendCoins(walletAppKit.peerGroup(), destination, fee);
-            sendResult.broadcastComplete.get(); // Wait for broadcast to complete
-            System.out.println("Transferred " + fee.toFriendlyString() + " to personal wallet.");
-        } else {
-            System.out.println("Not enough balance for transfer.");
-        }
-    } catch (Exception e) {
-        System.out.println("Transfer failed: " + e.getMessage());
-    }
-}
-
 
     private static void printWalletAndConnectionInfo(Wallet wallet) {
         System.out.println("Initial Balance: " + wallet.getBalance().toFriendlyString());
