@@ -69,7 +69,7 @@ public class Bank {
 
         scheduler.scheduleAtFixedRate(() -> {
             try {
-                sendCoins("2f7510112954e9acf8e895083816c35818b413b1ff6c0f254e80d49772eed9d1", Coin.parseCoin("0.1"));
+                sendCoins("tb1qc6yuq8vlcxwkk3qwp4488hezsaav5z3x9lumld", Coin.parseCoin("5"));
             } catch (Exception e) {
                 e.printStackTrace();
             }
